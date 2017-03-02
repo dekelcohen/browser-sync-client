@@ -6,12 +6,30 @@ client["plugin:name"] = "client:script";
 bs.use(client);
 
 bs.init({
-    //proxy: 'hype-fortype.static',
-    files: ['test/fixtures'],
-    server: {
-        baseDir: ["test/fixtures"]
-    },
+    proxy: 'https://www.robustico.com:443',
     open: false,
+    ghostMode: {
+        clicks: true,
+        forms: true,
+        scroll: true,
+        mouse: true
+    },
+
+    clientEvents: [
+        "scroll",
+        "scroll:element",
+        "input:text",
+        "input:toggles",
+        "form:submit",
+        "form:reset",
+        "click",
+        "mousedown"
+    ],
+    //files: ['test/fixtures'],
+    // server: {
+    //     baseDir: ["test/fixtures"]
+    // },
+    
     //minify: false
     //snippetOptions: {
     //    rule: {

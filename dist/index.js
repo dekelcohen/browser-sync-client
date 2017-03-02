@@ -114,7 +114,7 @@ function getByPath(obj, path) {
 
     return obj;
 }
-},{"./browser.utils":2,"./emitter":5,"./notify":16,"./socket":17,"./tab":18}],2:[function(require,module,exports){
+},{"./browser.utils":2,"./emitter":5,"./notify":17,"./socket":18,"./tab":19}],2:[function(require,module,exports){
 "use strict";
 
 var utils = exports;
@@ -1093,7 +1093,7 @@ exports.init = function (bs, eventManager) {
 exports.browserEvent = function (bs) {
 
     return function (event) {
-
+        console.log('browserEvent - click')
         if (exports.canEmitEvents) {
 
             var elem = event.target || event.srcElement;
@@ -1119,7 +1119,7 @@ exports.browserEvent = function (bs) {
 exports.socketEvent = function (bs, eventManager) {
 
     return function (data) {
-
+        console.log('socketEvent - click')
         if (!bs.canSync(data, OPT_PATH) || bs.tabHidden) {
             return false;
         }
@@ -1407,6 +1407,7 @@ var eventManager = require("./events").manager;
 exports.plugins = {
     "scroll":   require("./ghostmode.scroll"),
     "clicks":   require("./ghostmode.clicks"),
+    "mouse":   require("./ghostmode.mouse"),
     "forms":    require("./ghostmode.forms"),
     "location": require("./ghostmode.location")
 };
@@ -1422,7 +1423,7 @@ exports.init = function (bs) {
         }
     }
 };
-},{"./events":6,"./ghostmode.clicks":7,"./ghostmode.forms":9,"./ghostmode.location":13,"./ghostmode.scroll":14}],13:[function(require,module,exports){
+},{"./events":6,"./ghostmode.clicks":7,"./ghostmode.forms":9,"./ghostmode.location":13,"./ghostmode.mouse":14,"./ghostmode.scroll":15}],13:[function(require,module,exports){
 "use strict";
 
 /**
@@ -1473,6 +1474,77 @@ exports.setPath = function (path) {
     window.location = window.location.protocol + "//" + window.location.host + path;
 };
 },{}],14:[function(require,module,exports){
+"use strict";
+
+/**
+ * This is the plugin for syncing clicks between browsers
+ * @type {string}
+ */
+var EVENT_NAME  = "mousedown";
+var OPT_PATH    = "ghostMode.mouse";
+exports.canEmitEvents = true;
+
+/**
+ * @param {BrowserSync} bs
+ * @param eventManager
+ */
+exports.init = function (bs, eventManager) {
+    console.log('init - mousedown')
+    eventManager.addEvent(document.body, EVENT_NAME, exports.browserEvent(bs));
+    bs.socket.on(EVENT_NAME, exports.socketEvent(bs, eventManager));
+};
+
+/**
+ * Uses event delegation to determine the clicked element
+ * @param {BrowserSync} bs
+ * @returns {Function}
+ */
+exports.browserEvent = function (bs) {
+
+    return function (event) {        
+        if (exports.canEmitEvents) {
+
+            var elem = event.target || event.srcElement;
+
+            // if (elem.type === "checkbox" || elem.type === "radio") {
+            //     bs.utils.forceChange(elem);
+            //     return;
+            // }
+
+
+            console.log('browserEvent - mousedown - before socket.emit')    
+            bs.socket.emit(EVENT_NAME, bs.utils.getElementData(elem));
+
+        } else {
+            exports.canEmitEvents = true;
+        }
+    };
+};
+
+/**
+ * @param {BrowserSync} bs
+ * @param {manager} eventManager
+ * @returns {Function}
+ */
+exports.socketEvent = function (bs, eventManager) {
+
+    return function (data) {
+        console.log('socketEvent - mousedown')
+        if (!bs.canSync(data, OPT_PATH) || bs.tabHidden) {
+            return false;
+        }
+
+        console.log('socketEvent - mousedown - after canSync')
+
+        var elem = bs.utils.getSingleElement(data.tagName, data.index);
+
+        if (elem) {
+            exports.canEmitEvents = false;
+            //eventManager.triggerClick(elem);
+        }
+    };
+};
+},{}],15:[function(require,module,exports){
 "use strict";
 
 /**
@@ -1646,7 +1718,7 @@ exports.getScrollTopPercentage = function (pos) {
     var percentage  = exports.getScrollPercentage(scrollSpace, pos);
     return percentage.y;
 };
-},{}],15:[function(require,module,exports){
+},{}],16:[function(require,module,exports){
 "use strict";
 
 var socket       = require("./socket");
@@ -1724,7 +1796,7 @@ if (window.__karma__) {
     window.__bs_index__      = exports;
 }
 /**debug:end**/
-},{"./browser-sync":1,"./browser.utils":2,"./client-shims":3,"./code-sync":4,"./emitter":5,"./events":6,"./ghostmode":12,"./ghostmode.clicks":7,"./ghostmode.forms":9,"./ghostmode.forms.input":8,"./ghostmode.forms.submit":10,"./ghostmode.forms.toggles":11,"./ghostmode.location":13,"./ghostmode.scroll":14,"./notify":16,"./socket":17}],16:[function(require,module,exports){
+},{"./browser-sync":1,"./browser.utils":2,"./client-shims":3,"./code-sync":4,"./emitter":5,"./events":6,"./ghostmode":12,"./ghostmode.clicks":7,"./ghostmode.forms":9,"./ghostmode.forms.input":8,"./ghostmode.forms.submit":10,"./ghostmode.forms.toggles":11,"./ghostmode.location":13,"./ghostmode.scroll":15,"./notify":17,"./socket":18}],17:[function(require,module,exports){
 "use strict";
 
 var scroll = require("./ghostmode.scroll");
@@ -1848,7 +1920,7 @@ exports.flash = function (message, timeout) {
 
     return elem;
 };
-},{"./browser.utils":2,"./ghostmode.scroll":14}],17:[function(require,module,exports){
+},{"./browser.utils":2,"./ghostmode.scroll":15}],18:[function(require,module,exports){
 "use strict";
 
 /**
@@ -1889,7 +1961,7 @@ exports.emit = function (name, data) {
 exports.on = function (name, func) {
     exports.socket.on(name, func);
 };
-},{}],18:[function(require,module,exports){
+},{}],19:[function(require,module,exports){
 var utils        = require("./browser.utils");
 var emitter      = require("./emitter");
 var $document    = utils.getDocument();
@@ -1926,4 +1998,4 @@ if (typeof $document.addEventListener === "undefined" ||
 } else {
     $document.addEventListener(visibilityChange, handleVisibilityChange, false);
 }
-},{"./browser.utils":2,"./emitter":5}]},{},[15]);
+},{"./browser.utils":2,"./emitter":5}]},{},[16]);
