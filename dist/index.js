@@ -1034,14 +1034,14 @@ exports._EventManager = function (cache) {
  * Trigger a click on an element
  * @param elem
  */
-exports.triggerClick = function (elem) {
+exports.triggerClick = function (elem,type ) {
 
     var evObj;
 
     if (document.createEvent) {
         window.setTimeout(function () {
             evObj = document.createEvent("MouseEvents");
-            evObj.initEvent("click", true, true);
+            evObj.initEvent(type || "click", true, true);
             elem.dispatchEvent(evObj);
         }, 0);
     } else {
@@ -1049,7 +1049,7 @@ exports.triggerClick = function (elem) {
             if (document.createEventObject) {
                 evObj = document.createEventObject();
                 evObj.cancelBubble = true;
-                elem.fireEvent("on" + "click", evObj);
+                elem.fireEvent("on" + (type || "click"), evObj);
             }
         }, 0);
     }
@@ -1490,8 +1490,10 @@ exports.canEmitEvents = true;
  */
 exports.init = function (bs, eventManager) {
     console.log('init - mousedown')
-    eventManager.addEvent(document.body, EVENT_NAME, exports.browserEvent(bs));
-    bs.socket.on(EVENT_NAME, exports.socketEvent(bs, eventManager));
+    eventManager.addEvent(document.body, 'mousedown', exports.browserEvent(bs));
+    eventManager.addEvent(document.body, 'mouseup', exports.browserEvent(bs));
+    bs.socket.on('mousedown', exports.socketEvent(bs, eventManager));
+    bs.socket.on('mouseup', exports.socketEvent(bs, eventManager));
 };
 
 /**
@@ -1506,14 +1508,10 @@ exports.browserEvent = function (bs) {
 
             var elem = event.target || event.srcElement;
 
-            // if (elem.type === "checkbox" || elem.type === "radio") {
-            //     bs.utils.forceChange(elem);
-            //     return;
-            // }
-
-
-            console.log('browserEvent - mousedown - before socket.emit')    
-            bs.socket.emit(EVENT_NAME, bs.utils.getElementData(elem));
+            console.log('browserEvent - before socket.emit: event.type=' + event.type)    
+            var data = bs.utils.getElementData(elem);
+            data.type = event.type;
+            bs.socket.emit(event.type, data);
 
         } else {
             exports.canEmitEvents = true;
@@ -1528,19 +1526,18 @@ exports.browserEvent = function (bs) {
  */
 exports.socketEvent = function (bs, eventManager) {
 
-    return function (data) {
-        console.log('socketEvent - mousedown')
+    return function (data) {        
         if (!bs.canSync(data, OPT_PATH) || bs.tabHidden) {
             return false;
         }
 
-        console.log('socketEvent - mousedown - after canSync')
+        console.log('socketEvent - type='  + data.type)
 
         var elem = bs.utils.getSingleElement(data.tagName, data.index);
 
         if (elem) {
             exports.canEmitEvents = false;
-            //eventManager.triggerClick(elem);
+            eventManager.triggerClick(elem, data.type);
         }
     };
 };

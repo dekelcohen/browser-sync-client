@@ -23,7 +23,8 @@ bs.init({
         "form:submit",
         "form:reset",
         "click",
-        "mousedown"
+        "mousedown",
+        "mouseup"
     ],
     //files: ['test/fixtures'],
     // server: {
