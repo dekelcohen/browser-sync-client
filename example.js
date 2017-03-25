@@ -24,7 +24,12 @@ bs.init({
         "form:reset",
         "click",
         "mousedown",
-        "mouseup"
+        "mouseup",
+        "mouseenter",
+        "mouseleave",
+//        "mousemove",
+        "mouseout",
+        "mouseover"
     ],
     //files: ['test/fixtures'],
     // server: {
